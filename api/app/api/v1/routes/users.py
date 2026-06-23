@@ -30,9 +30,7 @@ def get_user(user_id: int, service: UserService = Depends(get_user_service)):
 
 
 @router.put("/users/{user_id}", response_model=UserRead)
-def update_user(
-    user_id: int, user: UserCreate, service: UserService = Depends(get_user_service)
-):
+def update_user(user_id: int, user: UserCreate, service: UserService = Depends(get_user_service)):
     updated = service.update_user(user_id, user.name)
     if not updated:
         raise HTTPException(status_code=404, detail="User not found")
