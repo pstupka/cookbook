@@ -1,0 +1,8 @@
+{
+  "name": "cookbook",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
+}
