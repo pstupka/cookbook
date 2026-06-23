@@ -1,8 +1,8 @@
+from api.app.services.recipe_service import RecipeService
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.db.schema import SessionLocal
 from app.models.recipe import RecipeCreate, RecipeRead
-from app.services.recipe_serrvice import RecipeService
 
 router = APIRouter()
 
