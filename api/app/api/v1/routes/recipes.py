@@ -1,8 +1,8 @@
-from api.app.services.recipe_service import RecipeService
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.db.schema import SessionLocal
 from app.models.recipe import RecipeCreate, RecipeRead
+from app.services.recipe_service import RecipeService
 
 router = APIRouter()
 
@@ -19,7 +19,10 @@ def get_recipes(service: RecipeService = Depends(get_recipe_service)):
 @router.post("/recipes", response_model=RecipeRead, status_code=201)
 def create_recipe(recipe: RecipeCreate, service: RecipeService = Depends(get_recipe_service)):
     return service.create_recipe(
-        recipe.name, recipe.description, recipe.ingredients, recipe.instructions
+        recipe.name,
+        recipe.description,
+        [i.model_dump() for i in recipe.ingredients],
+        [s.model_dump() for s in recipe.instructions],
     )
 
 
@@ -38,7 +41,11 @@ def update_recipe(
     service: RecipeService = Depends(get_recipe_service),
 ):
     updated = service.update_recipe(
-        recipe_id, recipe.name, recipe.description, recipe.ingredients, recipe.instructions
+        recipe_id,
+        recipe.name,
+        recipe.description,
+        [i.model_dump() for i in recipe.ingredients],
+        [s.model_dump() for s in recipe.instructions],
     )
     if not updated:
         raise HTTPException(status_code=404, detail="Recipe not found")
