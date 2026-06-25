@@ -1,6 +1,6 @@
 from enum import StrEnum
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class IngredientUnit(StrEnum):
@@ -15,7 +15,7 @@ class IngredientUnit(StrEnum):
 
 
 class IngredientCreate(BaseModel):
-    name: str
+    name: str = Field(min_length=1)
     default_unit: IngredientUnit | None = None
 
 

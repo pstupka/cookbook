@@ -1,20 +1,20 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class RecipeIngredient(BaseModel):
-    name: str
+    name: str = Field(min_length=1)
     quantity: str
     unit: str | None = None
 
 
 class RecipeStep(BaseModel):
     order: int
-    text: str
+    text: str = Field(min_length=1)
     photo_url: str | None = None
 
 
 class RecipeCreate(BaseModel):
-    name: str
+    name: str = Field(min_length=1)
     description: str
     ingredients: list[RecipeIngredient]
     instructions: list[RecipeStep]

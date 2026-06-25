@@ -35,6 +35,20 @@ def test_create_recipe_invalid_payload(client):
     assert response.status_code == 422
 
 
+def test_create_recipe_empty_name(client):
+    response = client.post(BASE_URL, json={**PAYLOAD, "name": ""})
+
+    assert response.status_code == 422
+
+
+def test_create_recipe_empty_ingredient_name(client):
+    payload = {**PAYLOAD, "ingredients": [{"name": "", "quantity": "1", "unit": "cup"}]}
+
+    response = client.post(BASE_URL, json=payload)
+
+    assert response.status_code == 422
+
+
 def test_get_recipe(client):
     created = client.post(BASE_URL, json=PAYLOAD).json()
 
@@ -95,3 +109,76 @@ def test_delete_recipe_not_found(client):
     response = client.delete(f"{BASE_URL}/999")
 
     assert response.status_code == 404
+
+
+def test_create_recipe_no_ingredients(client):
+    payload = {**PAYLOAD, "ingredients": []}
+
+    response = client.post(BASE_URL, json=payload)
+
+    assert response.status_code == 201
+    assert response.json()["recipe_ingredients"] == []
+
+
+def test_create_recipe_multiple_ingredients(client):
+    payload = {
+        **PAYLOAD,
+        "ingredients": [
+            {"name": "Flour", "quantity": "2", "unit": "cups"},
+            {"name": "Sugar", "quantity": "1", "unit": "tbsp"},
+            {"name": "Salt", "quantity": "0.5", "unit": "tsp"},
+        ],
+    }
+
+    response = client.post(BASE_URL, json=payload)
+
+    assert response.status_code == 201
+    assert len(response.json()["recipe_ingredients"]) == 3
+
+
+def test_create_recipe_fractional_quantity(client):
+    payload = {**PAYLOAD, "ingredients": [{"name": "Yeast", "quantity": "0.5", "unit": "tsp"}]}
+
+    response = client.post(BASE_URL, json=payload)
+
+    assert response.status_code == 201
+    assert response.json()["recipe_ingredients"][0]["quantity"] == 0.5
+
+
+def test_delete_recipe_cascades_to_recipe_ingredients(client, db_session):
+    from app.db.schema import RecipeIngredient
+
+    created = client.post(BASE_URL, json=PAYLOAD).json()
+    recipe_id = created["id"]
+
+    client.delete(f"{BASE_URL}/{recipe_id}")
+
+    orphans = (
+        db_session.query(RecipeIngredient).filter(RecipeIngredient.recipe_id == recipe_id).all()
+    )
+    assert orphans == []
+
+
+def test_update_recipe_reuses_existing_ingredient(client, db_session):
+    from app.db.schema import Ingredient
+
+    client.post(BASE_URL, json=PAYLOAD)  # creates Flour ingredient
+    created = client.post(BASE_URL, json=PAYLOAD).json()  # reuses Flour
+
+    # Update second recipe to also use Flour
+    client.put(f"{BASE_URL}/{created['id']}", json=PAYLOAD)
+
+    assert db_session.query(Ingredient).filter(Ingredient.name == "Flour").count() == 1
+
+
+def test_delete_ingredient_used_in_recipe_orphans_recipe(client):
+    # Create a recipe (also creates the Flour ingredient)
+    recipe = client.post(BASE_URL, json=PAYLOAD).json()
+    ingredient_id = recipe["recipe_ingredients"][0]["ingredient"]["id"]
+
+    # Deleting an ingredient used in a recipe should be rejected
+    response = client.delete(f"/api/v1/ingredients/{ingredient_id}")
+
+    assert response.status_code == 409
+    # Recipe is unaffected
+    assert client.get(f"{BASE_URL}/{recipe['id']}").status_code == 200

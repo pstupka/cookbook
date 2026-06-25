@@ -1,7 +1,7 @@
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.db.schema import Ingredient
+from app.db.schema import Ingredient, RecipeIngredient
 
 
 class IngredientService:
@@ -24,6 +24,14 @@ class IngredientService:
             raise ValueError(f"Ingredient '{name}' already exists")
         self._db.refresh(ingredient)
         return ingredient
+
+    def is_in_use(self, ingredient_id: int) -> bool:
+        return (
+            self._db.query(RecipeIngredient)
+            .filter(RecipeIngredient.ingredient_id == ingredient_id)
+            .first()
+            is not None
+        )
 
     def delete_ingredient(self, ingredient_id: int) -> bool:
         ingredient = self.get_ingredient(ingredient_id)

@@ -25,6 +25,12 @@ def test_create_ingredient_no_unit(client):
     assert response.json()["default_unit"] is None
 
 
+def test_create_ingredient_unknown_unit(client):
+    response = client.post(BASE_URL, json={"name": "Pepper", "default_unit": "unknown"})
+
+    assert response.status_code == 422
+
+
 def test_create_ingredient_duplicate_returns_409(client):
     client.post(BASE_URL, json={"name": "Salt"})
 
@@ -35,6 +41,12 @@ def test_create_ingredient_duplicate_returns_409(client):
 
 def test_create_ingredient_invalid_payload(client):
     response = client.post(BASE_URL, json={})
+
+    assert response.status_code == 422
+
+
+def test_create_ingredient_empty_name(client):
+    response = client.post(BASE_URL, json={"name": ""})
 
     assert response.status_code == 422
 
@@ -61,3 +73,19 @@ def test_delete_ingredient_not_found(client):
     response = client.delete(f"{BASE_URL}/999")
 
     assert response.status_code == 404
+
+
+def test_delete_ingredient_referenced_by_recipe_succeeds(client):
+    # Deleting an ingredient used in a recipe is now rejected with 409
+    recipe_payload = {
+        "name": "Bread",
+        "description": "desc",
+        "ingredients": [{"name": "Flour", "quantity": "2", "unit": "cups"}],
+        "instructions": [{"order": 1, "text": "Mix"}],
+    }
+    client.post("/api/v1/recipes", json=recipe_payload)
+    ingredient = client.get(BASE_URL).json()[0]
+
+    response = client.delete(f"{BASE_URL}/{ingredient['id']}")
+
+    assert response.status_code == 409

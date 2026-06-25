@@ -32,6 +32,8 @@ def delete_ingredient(
     ingredient_id: int,
     service: IngredientService = Depends(get_ingredient_service),
 ):
+    if service.is_in_use(ingredient_id):
+        raise HTTPException(status_code=409, detail="Ingredient is used in one or more recipes")
     success = service.delete_ingredient(ingredient_id)
     if not success:
         raise HTTPException(status_code=404, detail="Ingredient not found")
