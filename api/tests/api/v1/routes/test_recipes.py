@@ -182,3 +182,106 @@ def test_delete_ingredient_used_in_recipe_orphans_recipe(client):
     assert response.status_code == 409
     # Recipe is unaffected
     assert client.get(f"{BASE_URL}/{recipe['id']}").status_code == 200
+
+
+# --- metadata tests ---
+
+
+def test_create_recipe_with_metadata(client):
+    payload = {
+        **PAYLOAD,
+        "prep_time": 15,
+        "cook_time": 45,
+        "diet_type": "vegan",
+        "meal_type": "dinner",
+    }
+
+    response = client.post(BASE_URL, json=payload)
+
+    assert response.status_code == 201
+    data = response.json()
+    assert data["prep_time"] == 15
+    assert data["cook_time"] == 45
+    assert data["diet_type"] == "vegan"
+    assert data["meal_type"] == "dinner"
+
+
+def test_create_recipe_defaults_metadata_to_none(client):
+    response = client.post(BASE_URL, json=PAYLOAD)
+
+    data = response.json()
+    assert data["prep_time"] is None
+    assert data["cook_time"] is None
+    assert data["diet_type"] is None
+    assert data["meal_type"] is None
+    assert data["tags"] == []
+
+
+def test_create_recipe_invalid_diet_type(client):
+    response = client.post(BASE_URL, json={**PAYLOAD, "diet_type": "carnivore"})
+
+    assert response.status_code == 422
+
+
+def test_create_recipe_invalid_meal_type(client):
+    response = client.post(BASE_URL, json={**PAYLOAD, "meal_type": "brunch"})
+
+    assert response.status_code == 422
+
+
+def test_create_recipe_with_tags(client):
+    payload = {**PAYLOAD, "tags": ["quick", "easy", "gluten-free"]}
+
+    response = client.post(BASE_URL, json=payload)
+
+    assert response.status_code == 201
+    tag_names = [t["name"] for t in response.json()["tags"]]
+    assert sorted(tag_names) == ["easy", "gluten-free", "quick"]
+
+
+def test_create_recipe_reuses_existing_tag(client, db_session):
+    from app.db.schema import Tag
+
+    client.post(BASE_URL, json={**PAYLOAD, "tags": ["quick"]})
+    client.post(BASE_URL, json={**PAYLOAD, "name": "Cake", "tags": ["quick"]})
+
+    assert db_session.query(Tag).filter(Tag.name == "quick").count() == 1
+
+
+def test_update_recipe_replaces_tags(client):
+    created = client.post(BASE_URL, json={**PAYLOAD, "tags": ["quick"]}).json()
+
+    updated = client.put(
+        f"{BASE_URL}/{created['id']}", json={**PAYLOAD, "tags": ["slow", "hearty"]}
+    ).json()
+
+    tag_names = [t["name"] for t in updated["tags"]]
+    assert sorted(tag_names) == ["hearty", "slow"]
+
+
+def test_update_recipe_clears_tags(client):
+    created = client.post(BASE_URL, json={**PAYLOAD, "tags": ["quick"]}).json()
+
+    updated = client.put(f"{BASE_URL}/{created['id']}", json={**PAYLOAD, "tags": []}).json()
+
+    assert updated["tags"] == []
+
+
+def test_update_recipe_metadata(client):
+    created = client.post(BASE_URL, json=PAYLOAD).json()
+
+    updated = client.put(
+        f"{BASE_URL}/{created['id']}",
+        json={
+            **PAYLOAD,
+            "prep_time": 10,
+            "cook_time": 20,
+            "diet_type": "vegetarian",
+            "meal_type": "lunch",
+        },
+    ).json()
+
+    assert updated["prep_time"] == 10
+    assert updated["cook_time"] == 20
+    assert updated["diet_type"] == "vegetarian"
+    assert updated["meal_type"] == "lunch"

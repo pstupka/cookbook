@@ -23,6 +23,11 @@ def create_recipe(recipe: RecipeCreate, service: RecipeService = Depends(get_rec
         recipe.description,
         [i.model_dump() for i in recipe.ingredients],
         [s.model_dump() for s in recipe.instructions],
+        prep_time=recipe.prep_time,
+        cook_time=recipe.cook_time,
+        diet_type=recipe.diet_type,
+        meal_type=recipe.meal_type,
+        tags=recipe.tags,
     )
 
 
@@ -46,6 +51,11 @@ def update_recipe(
         recipe.description,
         [i.model_dump() for i in recipe.ingredients],
         [s.model_dump() for s in recipe.instructions],
+        prep_time=recipe.prep_time,
+        cook_time=recipe.cook_time,
+        diet_type=recipe.diet_type,
+        meal_type=recipe.meal_type,
+        tags=recipe.tags,
     )
     if not updated:
         raise HTTPException(status_code=404, detail="Recipe not found")

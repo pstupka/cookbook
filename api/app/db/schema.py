@@ -1,4 +1,14 @@
-from sqlalchemy import JSON, Float, ForeignKey, String, UniqueConstraint, create_engine
+from sqlalchemy import (
+    JSON,
+    Column,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Table,
+    UniqueConstraint,
+    create_engine,
+)
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, sessionmaker
 
 from app.core.config import config
@@ -16,6 +26,21 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String, index=True)
+
+
+class Tag(Base):
+    __tablename__ = "tags"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String, unique=True, index=True)
+
+
+recipe_tags = Table(
+    "recipe_tags",
+    Base.metadata,
+    Column("recipe_id", ForeignKey("recipes.id"), primary_key=True),
+    Column("tag_id", ForeignKey("tags.id"), primary_key=True),
+)
 
 
 class RecipeIngredient(Base):
@@ -36,9 +61,14 @@ class Recipe(Base):
     name: Mapped[str] = mapped_column(String, index=True)
     description: Mapped[str] = mapped_column(String)
     instructions: Mapped[list] = mapped_column(JSON)
+    prep_time: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    cook_time: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    diet_type: Mapped[str | None] = mapped_column(String, nullable=True)
+    meal_type: Mapped[str | None] = mapped_column(String, nullable=True)
     recipe_ingredients: Mapped[list["RecipeIngredient"]] = relationship(
         "RecipeIngredient", cascade="all, delete-orphan"
     )
+    tags: Mapped[list["Tag"]] = relationship("Tag", secondary=recipe_tags)
 
 
 class Ingredient(Base):
