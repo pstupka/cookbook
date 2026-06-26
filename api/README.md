@@ -1,33 +1,81 @@
-# Cookbook App API
-Cookbook App API built with FastAPI and SQLAlchemy. This API allows users to create, read, update, and delete recipes.
+# Cookbook API
 
+REST API for the Cookbook app, built with FastAPI, SQLAlchemy, and PostgreSQL.
 
-### Installation for local development
+## Requirements
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/cookbook.git
-   cd cookbook
-   ```
+- Python 3.12+
+- Docker & Docker Compose
 
-2. Create a virtual environment and activate it:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows use `venv\Scripts\activate`
-   ```
+## Setup
 
-3. Install the dependencies:
-   ```bash
-   pip install -e .
-   ```
-
-4. Set up the environment variables:
+1. Copy the environment file and fill in your values:
    ```bash
    cp .env.example .env
-   # Edit .env file with your database credentials
    ```
 
-5. Run the application:
+2. Create and activate a virtual environment:
    ```bash
-   uvicorn app.main:app --reload
+   python -m venv .venv
+   source .venv/bin/activate
    ```
+
+3. Install dependencies:
+   ```bash
+   pip install -e ".[dev]"
+   ```
+
+## Running
+
+```bash
+# Start the database
+docker compose up -d db
+
+# Apply migrations
+alembic upgrade head
+
+# Start the API (hot reload)
+uvicorn app.main:app --reload
+```
+
+API is available at `http://localhost:8000`. Interactive docs at `http://localhost:8000/docs`.
+
+## Database migrations
+
+```bash
+# Generate a migration after changing models
+alembic revision --autogenerate -m "description"
+
+# Apply pending migrations
+alembic upgrade head
+
+# Roll back one migration
+alembic downgrade -1
+```
+
+## Testing
+
+```bash
+pytest
+```
+
+Tests use an in-memory SQLite database and do not require a running Postgres instance.
+
+## API endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/v1/recipes` | List recipes |
+| POST | `/api/v1/recipes` | Create recipe |
+| GET | `/api/v1/recipes/{id}` | Get recipe |
+| PUT | `/api/v1/recipes/{id}` | Update recipe |
+| DELETE | `/api/v1/recipes/{id}` | Delete recipe |
+| GET | `/api/v1/ingredients` | List ingredients |
+| POST | `/api/v1/ingredients` | Create ingredient |
+| PATCH | `/api/v1/ingredients/{id}` | Update ingredient |
+| DELETE | `/api/v1/ingredients/{id}` | Delete ingredient |
+| GET | `/api/v1/users` | List users |
+| POST | `/api/v1/users` | Create user |
+| GET | `/api/v1/users/{id}` | Get user |
+| PUT | `/api/v1/users/{id}` | Update user |
+| DELETE | `/api/v1/users/{id}` | Delete user |

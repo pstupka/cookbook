@@ -13,7 +13,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship,
 
 from app.core.config import config
 
-engine = create_engine(config.db_url, connect_args={"check_same_thread": False})
+engine = create_engine(config.db_url)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
