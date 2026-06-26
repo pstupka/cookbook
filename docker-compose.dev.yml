@@ -29,6 +29,8 @@ services:
     environment:
       DB_HOST: db
       DB_PORT: 5432
+      DEBUG: "true"
+      API_SECRET_KEY: ${API_SECRET_KEY}
     depends_on:
       db:
         condition: service_healthy

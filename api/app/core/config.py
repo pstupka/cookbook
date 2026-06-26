@@ -12,6 +12,9 @@ class Config(BaseSettings):
     db_user: str
     db_password: str
     db_name: str
+    api_secret_key: str
+    api_algorithm: str = "HS256"
+    api_access_token_expire_minutes: int = 30
 
     @property
     def db_url(self):

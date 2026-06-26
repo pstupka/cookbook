@@ -25,7 +25,11 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String, index=True)
+    username: Mapped[str] = mapped_column(String, unique=True, index=True)
+    email: Mapped[str | None] = mapped_column(String, nullable=True)
+    full_name: Mapped[str | None] = mapped_column(String, nullable=True)
+    hashed_password: Mapped[str] = mapped_column(String)
+    disabled: Mapped[bool] = mapped_column(default=False, server_default="false")
 
 
 class Tag(Base):
