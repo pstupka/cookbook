@@ -29,7 +29,7 @@ REST API for the Cookbook app, built with FastAPI, SQLAlchemy, and PostgreSQL.
 
 ```bash
 # Start the database
-docker compose up -d db
+docker compose -f ../docker-compose.dev.yml up -d db
 
 # Apply migrations
 alembic upgrade head

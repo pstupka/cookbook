@@ -6,7 +6,11 @@ from app.core.logging import setup_logging
 
 setup_logging()
 
-app = FastAPI(title=config.app_name)
+app = (
+    FastAPI(docs_url=None, redoc_url=None, title=config.app_name)
+    if not config.debug
+    else FastAPI(title=config.app_name)
+)
 
 
 # Register routes
