@@ -1,3 +1,4 @@
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.db.schema import Ingredient, Recipe, RecipeIngredient, Tag
@@ -7,11 +8,29 @@ class RecipeService:
     def __init__(self, session: Session):
         self._db = session
 
-    def list_recipes(self) -> list[Recipe]:
-        return self._db.query(Recipe).all()
+    def list_recipes(self, current_user_id: int | None = None) -> list[Recipe]:
+        query = self._db.query(Recipe)
+        if current_user_id is None:
+            query = query.filter(Recipe.visibility == "public")
+        else:
+            query = query.filter(
+                or_(
+                    Recipe.visibility == "public",
+                    Recipe.visibility == "members",
+                    Recipe.owner_id == current_user_id,
+                )
+            )
+        return query.all()
 
-    def get_recipe(self, recipe_id: int) -> Recipe | None:
-        return self._db.query(Recipe).filter(Recipe.id == recipe_id).first()
+    def get_recipe(self, recipe_id: int, current_user_id: int | None = None) -> Recipe:
+        recipe = self._db.query(Recipe).filter(Recipe.id == recipe_id).first()
+        if not recipe:
+            raise LookupError(f"Recipe {recipe_id} not found")
+        if recipe.visibility == "private" and recipe.owner_id != current_user_id:
+            raise PermissionError("You do not own this recipe")
+        if recipe.visibility == "members" and current_user_id is None:
+            raise PermissionError("You do not have access to this recipe")
+        return recipe
 
     def _get_or_create_ingredient(self, name: str) -> Ingredient:
         ingredient = self._db.query(Ingredient).filter(Ingredient.name == name).first()
@@ -40,6 +59,8 @@ class RecipeService:
         diet_type: str | None = None,
         meal_type: str | None = None,
         tags: list[str] | None = None,
+        visibility: str = "public",
+        owner_id: int | None = None,
     ) -> Recipe:
         recipe = Recipe(
             name=name,
@@ -49,6 +70,8 @@ class RecipeService:
             cook_time=cook_time,
             diet_type=diet_type,
             meal_type=meal_type,
+            visibility=visibility,
+            owner_id=owner_id,
         )
         self._db.add(recipe)
         self._db.flush()
@@ -79,10 +102,14 @@ class RecipeService:
         diet_type: str | None = None,
         meal_type: str | None = None,
         tags: list[str] | None = None,
-    ) -> Recipe | None:
-        recipe = self.get_recipe(recipe_id)
-        if not recipe:
-            return None
+        visibility: str | None = None,
+        current_user_id: int | None = None,
+    ) -> Recipe:
+        recipe = self.get_recipe(recipe_id, current_user_id=current_user_id)
+        if recipe.owner_id is not None and recipe.owner_id != current_user_id:
+            raise PermissionError("You do not own this recipe")
+        if visibility is not None:
+            recipe.visibility = visibility
         recipe.name = name
         recipe.description = description
         recipe.instructions = instructions
@@ -106,10 +133,9 @@ class RecipeService:
         self._db.refresh(recipe)
         return recipe
 
-    def delete_recipe(self, recipe_id: int) -> bool:
-        recipe = self.get_recipe(recipe_id)
-        if not recipe:
-            return False
+    def delete_recipe(self, recipe_id: int, current_user_id: int | None = None) -> None:
+        recipe = self.get_recipe(recipe_id, current_user_id=current_user_id)
+        if recipe.owner_id is not None and recipe.owner_id != current_user_id:
+            raise PermissionError("You do not own this recipe")
         self._db.delete(recipe)
         self._db.commit()
-        return True

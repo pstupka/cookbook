@@ -60,9 +60,8 @@ def test_get_recipe_found(service):
 
 
 def test_get_recipe_not_found(service):
-    result = service.get_recipe(999)
-
-    assert result is None
+    with pytest.raises(LookupError):
+        service.get_recipe(999)
 
 
 def test_list_recipes_returns_all(service):
@@ -102,21 +101,108 @@ def test_update_recipe_replaces_ingredients(service):
 
 
 def test_update_recipe_not_found(service):
-    result = service.update_recipe(999, "Name", "desc", INGREDIENTS, INSTRUCTIONS)
-
-    assert result is None
+    with pytest.raises(LookupError):
+        service.update_recipe(999, "Name", "desc", INGREDIENTS, INSTRUCTIONS)
 
 
 def test_delete_recipe(service):
     recipe = service.create_recipe("Bread", "desc", INGREDIENTS, INSTRUCTIONS)
 
-    deleted = service.delete_recipe(recipe.id)
+    service.delete_recipe(recipe.id)
 
-    assert deleted is True
-    assert service.get_recipe(recipe.id) is None
+    with pytest.raises(LookupError):
+        service.get_recipe(recipe.id)
 
 
 def test_delete_recipe_not_found(service):
-    result = service.delete_recipe(999)
+    with pytest.raises(LookupError):
+        service.delete_recipe(999)
 
-    assert result is False
+
+def test_create_recipe_defaults_to_public(service):
+    recipe = service.create_recipe("Bread", "desc", INGREDIENTS, INSTRUCTIONS)
+
+    assert recipe.visibility == "public"
+    assert recipe.owner_id is None
+
+
+def test_create_recipe_with_visibility_and_owner(service):
+    recipe = service.create_recipe(
+        "Bread", "desc", INGREDIENTS, INSTRUCTIONS, visibility="private", owner_id=1
+    )
+
+    assert recipe.visibility == "private"
+    assert recipe.owner_id == 1
+
+
+def test_get_private_recipe_wrong_user_raises(service):
+    recipe = service.create_recipe(
+        "Secret", "desc", INGREDIENTS, INSTRUCTIONS, visibility="private", owner_id=1
+    )
+
+    with pytest.raises(PermissionError):
+        service.get_recipe(recipe.id, current_user_id=2)
+
+
+def test_get_private_recipe_by_owner_succeeds(service):
+    recipe = service.create_recipe(
+        "Secret", "desc", INGREDIENTS, INSTRUCTIONS, visibility="private", owner_id=1
+    )
+
+    result = service.get_recipe(recipe.id, current_user_id=1)
+
+    assert result.id == recipe.id
+
+
+def test_get_members_recipe_unauthenticated_raises(service):
+    recipe = service.create_recipe(
+        "Members Only", "desc", INGREDIENTS, INSTRUCTIONS, visibility="members"
+    )
+
+    with pytest.raises(PermissionError):
+        service.get_recipe(recipe.id, current_user_id=None)
+
+
+def test_list_recipes_unauthenticated_excludes_private_and_members(service):
+    service.create_recipe("Public", "desc", INGREDIENTS, INSTRUCTIONS, visibility="public")
+    service.create_recipe("Members", "desc", INGREDIENTS, INSTRUCTIONS, visibility="members")
+    service.create_recipe("Private", "desc", INGREDIENTS, INSTRUCTIONS, visibility="private")
+
+    recipes = service.list_recipes(current_user_id=None)
+
+    assert len(recipes) == 1
+    assert recipes[0].name == "Public"
+
+
+def test_list_recipes_authenticated_excludes_others_private(service):
+    service.create_recipe("Public", "desc", INGREDIENTS, INSTRUCTIONS, visibility="public")
+    service.create_recipe("Members", "desc", INGREDIENTS, INSTRUCTIONS, visibility="members")
+    service.create_recipe(
+        "Other Private", "desc", INGREDIENTS, INSTRUCTIONS, visibility="private", owner_id=99
+    )
+    service.create_recipe(
+        "Own Private", "desc", INGREDIENTS, INSTRUCTIONS, visibility="private", owner_id=1
+    )
+
+    recipes = service.list_recipes(current_user_id=1)
+
+    names = {r.name for r in recipes}
+    assert names == {"Public", "Members", "Own Private"}
+
+
+def test_update_recipe_non_owner_raises(service):
+    recipe = service.create_recipe(
+        "Bread", "desc", INGREDIENTS, INSTRUCTIONS, visibility="members", owner_id=1
+    )
+
+    with pytest.raises(PermissionError):
+        service.update_recipe(
+            recipe.id, "Hacked", "desc", INGREDIENTS, INSTRUCTIONS, current_user_id=2
+        )
+
+
+def test_delete_recipe_non_owner_raises(service):
+    recipe = service.create_recipe("Bread", "desc", INGREDIENTS, INSTRUCTIONS, owner_id=1)
+
+    with pytest.raises(PermissionError):
+        service.delete_recipe(recipe.id, current_user_id=2)

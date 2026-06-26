@@ -69,6 +69,8 @@ class Recipe(Base):
         "RecipeIngredient", cascade="all, delete-orphan"
     )
     tags: Mapped[list["Tag"]] = relationship("Tag", secondary=recipe_tags)
+    visibility: Mapped[str] = mapped_column(String, default="public", server_default="public")
+    owner_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
 
 
 class Ingredient(Base):

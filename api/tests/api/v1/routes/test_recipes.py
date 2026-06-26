@@ -23,6 +23,8 @@ def test_create_recipe(client):
     assert data["id"] is not None
     assert data["name"] == "Bread"
     assert data["description"] == "Simple bread"
+    assert data["visibility"] == "public"
+    assert data["owner_id"] is None
     assert len(data["recipe_ingredients"]) == 1
     assert data["recipe_ingredients"][0]["ingredient"]["name"] == "Flour"
     assert data["recipe_ingredients"][0]["quantity"] == 2.0
@@ -109,6 +111,35 @@ def test_delete_recipe_not_found(client):
     response = client.delete(f"{BASE_URL}/999")
 
     assert response.status_code == 404
+
+
+def test_create_recipe_with_visibility(client):
+    payload = {**PAYLOAD, "visibility": "members"}
+
+    response = client.post(BASE_URL, json=payload)
+
+    assert response.status_code == 201
+    assert response.json()["visibility"] == "members"
+
+
+def test_list_recipes_excludes_private_when_no_auth(client):
+    client.post(BASE_URL, json={**PAYLOAD, "name": "Public", "visibility": "public"})
+    client.post(BASE_URL, json={**PAYLOAD, "name": "Private", "visibility": "private"})
+
+    response = client.get(BASE_URL)
+
+    assert response.status_code == 200
+    names = [r["name"] for r in response.json()]
+    assert "Public" in names
+    assert "Private" not in names
+
+
+def test_get_private_recipe_returns_403(client):
+    created = client.post(BASE_URL, json={**PAYLOAD, "visibility": "private", "owner_id": 1}).json()
+
+    response = client.get(f"{BASE_URL}/{created['id']}")
+
+    assert response.status_code == 403
 
 
 def test_create_recipe_no_ingredients(client):

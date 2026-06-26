@@ -18,6 +18,12 @@ class MealType(StrEnum):
     DESSERT = "dessert"
 
 
+class RecipeVisibility(StrEnum):
+    PUBLIC = "public"
+    PRIVATE = "private"
+    MEMBERS = "members"
+
+
 class RecipeIngredient(BaseModel):
     name: str = Field(min_length=1)
     quantity: str
@@ -40,6 +46,8 @@ class RecipeCreate(BaseModel):
     diet_type: DietType | None = None
     meal_type: MealType | None = None
     tags: list[str] = []
+    visibility: RecipeVisibility = RecipeVisibility.PUBLIC
+    owner_id: int | None = None
 
 
 class IngredientSummary(BaseModel):
@@ -75,5 +83,7 @@ class RecipeRead(BaseModel):
     tags: list[TagRead]
     recipe_ingredients: list[RecipeIngredientRead]
     instructions: list[RecipeStep]
+    visibility: RecipeVisibility
+    owner_id: int | None
 
     model_config = {"from_attributes": True}
