@@ -61,6 +61,16 @@ pytest
 
 Tests use an in-memory SQLite database and do not require a running Postgres instance.
 
+## Seeding
+
+Populate the database with example data:
+
+```bash
+docker compose -f ../docker-compose.dev.yml run --rm api python seed.py
+```
+
+This creates an `admin` user (password: `secret`) and two sample recipes.
+
 ## API endpoints
 
 | Method | Path | Description |
