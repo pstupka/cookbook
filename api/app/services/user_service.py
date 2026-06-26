@@ -23,12 +23,14 @@ class UserService:
         password: str,
         email: str | None = None,
         full_name: str | None = None,
+        is_admin: bool = False,
     ) -> User:
         user = User(
             username=username,
             hashed_password=hash_password(password),
             email=email,
             full_name=full_name,
+            is_admin=is_admin,
         )
         self._db.add(user)
         self._db.commit()

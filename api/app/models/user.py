@@ -6,6 +6,7 @@ class UserCreate(BaseModel):
     password: str
     email: EmailStr | None = None
     full_name: str | None = None
+    is_admin: bool = False
 
 
 class UserRead(BaseModel):
@@ -14,6 +15,7 @@ class UserRead(BaseModel):
     email: str | None = None
     full_name: str | None = None
     disabled: bool
+    is_admin: bool
 
 
 class UserUpdate(BaseModel):

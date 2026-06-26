@@ -16,7 +16,8 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 COPY app/ ./app/
 COPY migrations/ ./migrations/
 COPY alembic.ini .
-COPY seed.py .
+COPY tasks/purge_db.py .
+COPY tasks/seed.py .
 
 USER appuser
 

@@ -13,11 +13,12 @@ os.environ.setdefault("DB_PASSWORD", "test")
 os.environ.setdefault("DB_NAME", "test")
 os.environ.setdefault("API_SECRET_KEY", "test-secret-key-for-testing-only-32x")
 
-from app.api.v1.deps import get_db
+from app.api.v1.deps import get_current_user, get_db
 from app.api.v1.routes.ingredients import get_ingredient_service
 from app.api.v1.routes.recipes import get_recipe_service
 from app.api.v1.routes.users import get_user_service
 from app.db.schema import Base
+from app.db.schema import User as UserORM
 from app.main import app
 from app.services.ingredient_service import IngredientService
 from app.services.recipe_service import RecipeService
@@ -39,8 +40,7 @@ def db_session():
     Base.metadata.drop_all(engine)
 
 
-@pytest.fixture()
-def client(db_session):
+def _make_client(db_session, current_user=None):
     def override_get_db():
         yield db_session
 
@@ -48,6 +48,34 @@ def client(db_session):
     app.dependency_overrides[get_recipe_service] = lambda: RecipeService(session=db_session)
     app.dependency_overrides[get_ingredient_service] = lambda: IngredientService(session=db_session)
     app.dependency_overrides[get_user_service] = lambda: UserService(session=db_session)
-    with TestClient(app) as c:
+    if current_user is not None:
+        app.dependency_overrides[get_current_user] = lambda: current_user
+    return TestClient(app)
+
+
+@pytest.fixture()
+def client(db_session):
+    c = _make_client(db_session)
+    with c:
+        yield c
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture()
+def admin_client(db_session):
+    admin = UserORM(
+        id=999, username="testadmin", is_admin=True, hashed_password="x", disabled=False
+    )
+    c = _make_client(db_session, current_user=admin)
+    with c:
+        yield c
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture()
+def regular_client(db_session):
+    user = UserORM(id=998, username="testuser", is_admin=False, hashed_password="x", disabled=False)
+    c = _make_client(db_session, current_user=user)
+    with c:
         yield c
     app.dependency_overrides.clear()

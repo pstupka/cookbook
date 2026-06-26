@@ -69,7 +69,7 @@ Populate the database with example data:
 docker compose -f ../docker-compose.dev.yml run --rm api python seed.py
 ```
 
-This creates an `admin` user (password: `secret`) and two sample recipes.
+This creates an `admin` user (password: `admin`) and two sample recipes.
 
 ## API endpoints
 

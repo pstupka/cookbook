@@ -1,15 +1,22 @@
-from app.db.schema import SessionLocal
+from sqlalchemy import text
+
+from app.db.schema import Base, SessionLocal, engine
 from app.services.recipe_service import RecipeService
 from app.services.user_service import UserService
 
 db = SessionLocal()
 
 try:
+    db.execute(text("DROP SCHEMA public CASCADE; CREATE SCHEMA public;"))
+    db.commit()
+    Base.metadata.create_all(engine)
+
     user = UserService(db).create_user(
         username="admin",
-        password="secret",
+        password="admin",
         email="admin@example.com",
         full_name="Admin User",
+        is_admin=True,
     )
 
     recipe_service = RecipeService(db)
