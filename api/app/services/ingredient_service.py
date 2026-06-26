@@ -33,6 +33,24 @@ class IngredientService:
             is not None
         )
 
+    def update_ingredient(
+        self, ingredient_id: int, name: str | None = None, default_unit: str | None = None
+    ) -> Ingredient | None:
+        ingredient = self.get_ingredient(ingredient_id)
+        if not ingredient:
+            return None
+        if name is not None:
+            ingredient.name = name
+        if default_unit is not None:
+            ingredient.default_unit = default_unit
+        try:
+            self._db.commit()
+        except IntegrityError:
+            self._db.rollback()
+            raise ValueError(f"Ingredient '{name}' already exists")
+        self._db.refresh(ingredient)
+        return ingredient
+
     def delete_ingredient(self, ingredient_id: int) -> bool:
         ingredient = self.get_ingredient(ingredient_id)
         if not ingredient:

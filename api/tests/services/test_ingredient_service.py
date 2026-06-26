@@ -72,3 +72,57 @@ def test_delete_ingredient_not_found(service):
     result = service.delete_ingredient(999)
 
     assert result is False
+
+
+def test_update_ingredient_name(service):
+    ingredient = service.create_ingredient("Salt", default_unit="tsp")
+
+    updated = service.update_ingredient(ingredient.id, name="Sea Salt")
+
+    assert updated is not None
+    assert updated.name == "Sea Salt"
+    assert updated.default_unit == "tsp"
+
+
+def test_update_ingredient_default_unit(service):
+    ingredient = service.create_ingredient("Flour")
+
+    updated = service.update_ingredient(ingredient.id, default_unit="g")
+
+    assert updated is not None
+    assert updated.name == "Flour"
+    assert updated.default_unit == "g"
+
+
+def test_update_ingredient_both_fields(service):
+    ingredient = service.create_ingredient("Sugar", default_unit="g")
+
+    updated = service.update_ingredient(ingredient.id, name="Brown Sugar", default_unit="tbsp")
+
+    assert updated is not None
+    assert updated.name == "Brown Sugar"
+    assert updated.default_unit == "tbsp"
+
+
+def test_update_ingredient_not_found_returns_none(service):
+    result = service.update_ingredient(999, name="Ghost")
+
+    assert result is None
+
+
+def test_update_ingredient_duplicate_name_raises(service):
+    service.create_ingredient("Salt")
+    other = service.create_ingredient("Pepper")
+
+    with pytest.raises(ValueError, match="Salt"):
+        service.update_ingredient(other.id, name="Salt")
+
+
+def test_update_ingredient_none_args_leaves_fields_unchanged(service):
+    ingredient = service.create_ingredient("Olive Oil", default_unit="ml")
+
+    updated = service.update_ingredient(ingredient.id)
+
+    assert updated is not None
+    assert updated.name == "Olive Oil"
+    assert updated.default_unit == "ml"

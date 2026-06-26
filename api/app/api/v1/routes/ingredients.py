@@ -27,6 +27,23 @@ def create_ingredient(
         raise HTTPException(status_code=409, detail=str(e))
 
 
+@router.patch("/ingredients/{ingredient_id}", response_model=IngredientRead)
+def patch_ingredient(
+    ingredient_id: int,
+    ingredient: IngredientCreate,
+    service: IngredientService = Depends(get_ingredient_service),
+):
+    try:
+        updated_ingredient = service.update_ingredient(
+            ingredient_id, ingredient.name, ingredient.default_unit
+        )
+        if not updated_ingredient:
+            raise HTTPException(status_code=404, detail="Ingredient not found")
+        return updated_ingredient
+    except ValueError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+
+
 @router.delete("/ingredients/{ingredient_id}", status_code=204)
 def delete_ingredient(
     ingredient_id: int,

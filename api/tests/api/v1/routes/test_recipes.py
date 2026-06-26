@@ -120,6 +120,33 @@ def test_create_recipe_no_ingredients(client):
     assert response.json()["recipe_ingredients"] == []
 
 
+def test_two_recipes_share_ingredient_with_different_units(client):
+    payload_grams = {
+        "name": "Chocolate Cake",
+        "description": "Rich cake",
+        "ingredients": [{"name": "Flour", "quantity": "200", "unit": "g"}],
+        "instructions": [{"order": 1, "text": "Mix"}],
+    }
+    payload_cups = {
+        "name": "Pancakes",
+        "description": "Fluffy pancakes",
+        "ingredients": [{"name": "Flour", "quantity": "1", "unit": "cups"}],
+        "instructions": [{"order": 1, "text": "Mix"}],
+    }
+
+    cake = client.post(BASE_URL, json=payload_grams).json()
+    pancakes = client.post(BASE_URL, json=payload_cups).json()
+
+    assert cake["recipe_ingredients"][0]["ingredient"]["name"] == "Flour"
+    assert cake["recipe_ingredients"][0]["unit"] == "g"
+    assert pancakes["recipe_ingredients"][0]["ingredient"]["name"] == "Flour"
+    assert pancakes["recipe_ingredients"][0]["unit"] == "cups"
+    assert (
+        cake["recipe_ingredients"][0]["ingredient"]["id"]
+        == pancakes["recipe_ingredients"][0]["ingredient"]["id"]
+    )
+
+
 def test_create_recipe_multiple_ingredients(client):
     payload = {
         **PAYLOAD,
@@ -134,6 +161,23 @@ def test_create_recipe_multiple_ingredients(client):
 
     assert response.status_code == 201
     assert len(response.json()["recipe_ingredients"]) == 3
+
+
+def test_create_recipe_multiple_ingredients_different_units(client):
+    payload = {
+        **PAYLOAD,
+        "ingredients": [
+            {"name": "Flour", "quantity": "2", "unit": "cups"},
+            {"name": "Flour", "quantity": "2", "unit": "tsp"},
+            {"name": "Sugar", "quantity": "1", "unit": "tbsp"},
+            {"name": "Salt", "quantity": "0.5", "unit": "tsp"},
+        ],
+    }
+
+    response = client.post(BASE_URL, json=payload)
+
+    assert response.status_code == 201
+    assert len(response.json()["recipe_ingredients"]) == 4
 
 
 def test_create_recipe_fractional_quantity(client):
