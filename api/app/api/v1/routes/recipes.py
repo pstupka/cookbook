@@ -1,14 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
 
-from app.db.schema import SessionLocal
+from app.api.v1.deps import get_current_user, get_db
+from app.db.schema import User as UserORM
 from app.models.recipe import RecipeCreate, RecipeRead
 from app.services.recipe_service import RecipeService
 
 router = APIRouter()
 
 
-def get_recipe_service() -> RecipeService:
-    return RecipeService(session=SessionLocal())
+def get_recipe_service(db: Session = Depends(get_db)) -> RecipeService:
+    return RecipeService(session=db)
 
 
 @router.get("/recipes", response_model=list[RecipeRead])
@@ -17,7 +19,11 @@ def get_recipes(service: RecipeService = Depends(get_recipe_service)):
 
 
 @router.post("/recipes", response_model=RecipeRead, status_code=201)
-def create_recipe(recipe: RecipeCreate, service: RecipeService = Depends(get_recipe_service)):
+def create_recipe(
+    recipe: RecipeCreate,
+    service: RecipeService = Depends(get_recipe_service),
+    current_user: UserORM = Depends(get_current_user),
+):
     return service.create_recipe(
         recipe.name,
         recipe.description,
@@ -29,7 +35,7 @@ def create_recipe(recipe: RecipeCreate, service: RecipeService = Depends(get_rec
         meal_type=recipe.meal_type,
         tags=recipe.tags,
         visibility=recipe.visibility,
-        owner_id=recipe.owner_id,
+        owner_id=current_user.id,
     )
 
 
@@ -48,7 +54,7 @@ def update_recipe(
     recipe_id: int,
     recipe: RecipeCreate,
     service: RecipeService = Depends(get_recipe_service),
-    current_user_id: int | None = None,
+    current_user: UserORM = Depends(get_current_user),
 ):
     try:
         return service.update_recipe(
@@ -63,7 +69,7 @@ def update_recipe(
             meal_type=recipe.meal_type,
             tags=recipe.tags,
             visibility=recipe.visibility,
-            current_user_id=current_user_id,
+            current_user_id=current_user.id,
         )
     except LookupError:
         raise HTTPException(status_code=404, detail="Recipe not found")
@@ -74,9 +80,15 @@ def update_recipe(
 
 
 @router.delete("/recipes/{recipe_id}", status_code=204)
-def delete_recipe(recipe_id: int, service: RecipeService = Depends(get_recipe_service)):
+def delete_recipe(
+    recipe_id: int,
+    service: RecipeService = Depends(
+        get_recipe_service,
+    ),
+    current_user: UserORM = Depends(get_current_user),
+):
     try:
-        service.delete_recipe(recipe_id)
+        service.delete_recipe(recipe_id, current_user.id)
     except LookupError:
         raise HTTPException(status_code=404, detail="Recipe not found")
     except PermissionError:

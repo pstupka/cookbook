@@ -1,14 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
 
-from app.db.schema import SessionLocal
+from app.api.v1.deps import get_current_user, get_db
+from app.db.schema import User as UserORM
 from app.models.ingredient import IngredientCreate, IngredientRead
 from app.services.ingredient_service import IngredientService
 
 router = APIRouter()
 
 
-def get_ingredient_service() -> IngredientService:
-    return IngredientService(session=SessionLocal())
+def get_ingredient_service(db: Session = Depends(get_db)) -> IngredientService:
+    return IngredientService(session=db)
 
 
 @router.get("/ingredients", response_model=list[IngredientRead])
@@ -20,6 +22,7 @@ def list_ingredients(service: IngredientService = Depends(get_ingredient_service
 def create_ingredient(
     ingredient: IngredientCreate,
     service: IngredientService = Depends(get_ingredient_service),
+    _: UserORM = Depends(get_current_user),
 ):
     try:
         return service.create_ingredient(ingredient.name, ingredient.default_unit)
@@ -32,6 +35,7 @@ def patch_ingredient(
     ingredient_id: int,
     ingredient: IngredientCreate,
     service: IngredientService = Depends(get_ingredient_service),
+    _: UserORM = Depends(get_current_user),
 ):
     try:
         updated_ingredient = service.update_ingredient(
@@ -48,6 +52,7 @@ def patch_ingredient(
 def delete_ingredient(
     ingredient_id: int,
     service: IngredientService = Depends(get_ingredient_service),
+    _: UserORM = Depends(get_current_user),
 ):
     if service.is_in_use(ingredient_id):
         raise HTTPException(status_code=409, detail="Ingredient is used in one or more recipes")

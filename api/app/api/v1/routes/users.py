@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
 
-from app.api.v1.deps import get_current_user
-from app.db.schema import SessionLocal
+from app.api.v1.deps import get_current_user, get_db
 from app.db.schema import User as UserORM
 from app.models.user import UserCreate, UserRead, UserUpdate
 from app.services.user_service import UserService
@@ -9,8 +9,8 @@ from app.services.user_service import UserService
 router = APIRouter()
 
 
-def get_user_service() -> UserService:
-    return UserService(session=SessionLocal())
+def get_user_service(db: Session = Depends(get_db)) -> UserService:
+    return UserService(session=db)
 
 
 @router.get("/users", response_model=list[UserRead])
