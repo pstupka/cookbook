@@ -19,7 +19,8 @@ COPY alembic.ini .
 COPY tasks/purge_db.py .
 COPY tasks/seed.py .
 COPY tasks/init_admin.py .
+COPY entrypoint.sh .
 
 USER appuser
 
-CMD ["sh", "-c", "alembic upgrade head && python init_admin.py && uvicorn app.main:app --host 0.0.0.0 --workers 4"]
+ENTRYPOINT ["sh", "entrypoint.sh"]
