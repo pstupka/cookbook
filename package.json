@@ -9,11 +9,17 @@
     "generate:types": "bash ./scripts/generate-types.sh",
     "dev:web": "npm run dev -w @cookbook/web",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.6.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "husky": "^9.1.7",
     "openapi-typescript": "^7.13.0",
-    "prettier": "^3.6.2"
+    "prettier": "^3.6.2",
+    "typescript-eslint": "^8.62.1"
   }
 }
