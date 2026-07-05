@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+npm run format:check
+
+if ! command -v pre-commit >/dev/null 2>&1; then
+	echo "pre-commit is not installed. Install it first, e.g. 'pip install pre-commit'." >&2
+	exit 1
+fi
+
+pre-commit run --config api/.pre-commit-config.yaml

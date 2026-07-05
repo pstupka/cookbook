@@ -1,0 +1,10 @@
+node_modules
+**/node_modules
+**/dist
+**/build
+**/.expo
+**/.next
+**/.turbo
+**/coverage
+api/openapi.json
+packages/shared/src/api/schema.d.ts

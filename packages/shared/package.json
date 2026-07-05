@@ -2,6 +2,10 @@
   "name": "@cookbook/shared",
   "version": "0.0.1",
   "private": true,
-  "main": "src/index.ts",
-  "types": "src/index.ts"
+  "type": "module",
+  "exports": {
+    "./src/api": "./src/api/index.ts",
+    "./src/types": "./src/types/index.ts",
+    "./src/utils": "./src/utils/index.ts"
+  }
 }
