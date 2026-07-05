@@ -17,7 +17,7 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-        
+
   api:
     build: ./api
     ports:

@@ -4,5 +4,16 @@
   "workspaces": [
     "apps/*",
     "packages/*"
-  ]
+  ],
+  "scripts": {
+    "generate:types": "bash ./scripts/generate-types.sh",
+    "dev:web": "npm run dev -w @cookbook/web",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "openapi-typescript": "^7.13.0",
+    "prettier": "^3.6.2"
+  }
 }

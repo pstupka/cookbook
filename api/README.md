@@ -10,11 +10,13 @@ REST API for the Cookbook app, built with FastAPI, SQLAlchemy, and PostgreSQL.
 ## Setup
 
 1. Copy the environment file and fill in your values:
+
    ```bash
    cp .env.example .env
    ```
 
 2. Create and activate a virtual environment:
+
    ```bash
    python -m venv .venv
    source .venv/bin/activate
@@ -73,19 +75,19 @@ This creates an `admin` user (password: `admin`) and two sample recipes.
 
 ## API endpoints
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/v1/recipes` | List recipes |
-| POST | `/api/v1/recipes` | Create recipe |
-| GET | `/api/v1/recipes/{id}` | Get recipe |
-| PUT | `/api/v1/recipes/{id}` | Update recipe |
-| DELETE | `/api/v1/recipes/{id}` | Delete recipe |
-| GET | `/api/v1/ingredients` | List ingredients |
-| POST | `/api/v1/ingredients` | Create ingredient |
-| PATCH | `/api/v1/ingredients/{id}` | Update ingredient |
+| Method | Path                       | Description       |
+| ------ | -------------------------- | ----------------- |
+| GET    | `/api/v1/recipes`          | List recipes      |
+| POST   | `/api/v1/recipes`          | Create recipe     |
+| GET    | `/api/v1/recipes/{id}`     | Get recipe        |
+| PUT    | `/api/v1/recipes/{id}`     | Update recipe     |
+| DELETE | `/api/v1/recipes/{id}`     | Delete recipe     |
+| GET    | `/api/v1/ingredients`      | List ingredients  |
+| POST   | `/api/v1/ingredients`      | Create ingredient |
+| PATCH  | `/api/v1/ingredients/{id}` | Update ingredient |
 | DELETE | `/api/v1/ingredients/{id}` | Delete ingredient |
-| GET | `/api/v1/users` | List users |
-| POST | `/api/v1/users` | Create user |
-| GET | `/api/v1/users/{id}` | Get user |
-| PUT | `/api/v1/users/{id}` | Update user |
-| DELETE | `/api/v1/users/{id}` | Delete user |
+| GET    | `/api/v1/users`            | List users        |
+| POST   | `/api/v1/users`            | Create user       |
+| GET    | `/api/v1/users/{id}`       | Get user          |
+| PUT    | `/api/v1/users/{id}`       | Update user       |
+| DELETE | `/api/v1/users/{id}`       | Delete user       |
