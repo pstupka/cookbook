@@ -7,7 +7,7 @@
   ],
   "scripts": {
     "generate:types": "bash ./scripts/generate-types.sh",
-    "dev:web": "npm run dev -w @cookbook/web",
+    "dev:web": "yarn workspace @cookbook/web dev",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",

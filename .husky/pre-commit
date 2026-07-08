@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-npm run format:check
+yarn format:check
 
 if ! command -v pre-commit >/dev/null 2>&1; then
 	echo "pre-commit is not installed. Install it first, e.g. 'pip install pre-commit'." >&2
