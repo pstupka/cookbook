@@ -1,8 +1,8 @@
+from init_admin import init_admin
 from sqlalchemy import text
 
 from app.db.schema import Base, SessionLocal, engine
 from app.services.recipe_service import RecipeService
-from app.services.user_service import UserService
 
 db = SessionLocal()
 
@@ -11,13 +11,7 @@ try:
     db.commit()
     Base.metadata.create_all(engine)
 
-    user = UserService(db).create_user(
-        username="admin",
-        password="admin",
-        email="admin@example.com",
-        full_name="Admin User",
-        is_admin=True,
-    )
+    user = init_admin()
 
     recipe_service = RecipeService(db)
 
@@ -65,6 +59,51 @@ try:
         diet_type="vegan",
         owner_id=user.id,
         visibility="public",
+    )
+
+    recipe_service.create_recipe(
+        name="Secret Chili Oil Noodles",
+        description="Spicy pantry noodles for a quick late-night meal",
+        ingredients=[
+            {"name": "Noodles", "quantity": "200", "unit": "g"},
+            {"name": "Chili Oil", "quantity": "2", "unit": "tbsp"},
+            {"name": "Soy Sauce", "quantity": "1", "unit": "tbsp"},
+            {"name": "Garlic", "quantity": "2", "unit": "cloves"},
+        ],
+        instructions=[
+            {"order": 1, "text": "Cook noodles according to package instructions"},
+            {"order": 2, "text": "Mix chili oil, soy sauce, and minced garlic"},
+            {"order": 3, "text": "Toss hot noodles with the sauce and serve"},
+        ],
+        tags=["quick", "spicy", "noodles"],
+        prep_time=5,
+        cook_time=10,
+        meal_type="dinner",
+        owner_id=user.id,
+        visibility="private",
+    )
+
+    recipe_service.create_recipe(
+        name="Members-Only Tiramisu Cups",
+        description="No-bake espresso dessert for community members",
+        ingredients=[
+            {"name": "Ladyfingers", "quantity": "12", "unit": "pieces"},
+            {"name": "Mascarpone", "quantity": "250", "unit": "g"},
+            {"name": "Espresso", "quantity": "120", "unit": "ml"},
+            {"name": "Cocoa Powder", "quantity": "1", "unit": "tbsp"},
+        ],
+        instructions=[
+            {"order": 1, "text": "Whisk mascarpone until smooth"},
+            {"order": 2, "text": "Dip ladyfingers briefly in espresso"},
+            {"order": 3, "text": "Layer ladyfingers and mascarpone in cups"},
+            {"order": 4, "text": "Dust with cocoa powder and chill before serving"},
+        ],
+        tags=["dessert", "coffee", "no-bake"],
+        prep_time=15,
+        cook_time=0,
+        meal_type="dessert",
+        owner_id=user.id,
+        visibility="members",
     )
 
     print("Seed complete.")

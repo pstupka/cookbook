@@ -15,6 +15,7 @@ class Config(BaseSettings):
     api_secret_key: str
     api_algorithm: str = "HS256"
     api_access_token_expire_minutes: int = 30
+    cors_origins: list[str] = ["http://localhost:5173"]  # override via CORS_ORIGINS env var in prod
 
     @property
     def db_url(self):
