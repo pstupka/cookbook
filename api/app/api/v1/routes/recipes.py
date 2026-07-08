@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.api.v1.deps import get_current_user, get_db
+from app.api.v1.deps import get_current_user, get_db, get_optional_current_user
 from app.db.schema import User as UserORM
 from app.models.recipe import RecipeCreate, RecipeRead
 from app.services.recipe_service import RecipeService
@@ -14,8 +14,11 @@ def get_recipe_service(db: Session = Depends(get_db)) -> RecipeService:
 
 
 @router.get("/recipes", response_model=list[RecipeRead])
-def get_recipes(service: RecipeService = Depends(get_recipe_service)):
-    return service.list_recipes()
+def get_recipes(
+    service: RecipeService = Depends(get_recipe_service),
+    current_user: UserORM | None = Depends(get_optional_current_user),
+):
+    return service.list_recipes(current_user_id=current_user.id if current_user else None)
 
 
 @router.post("/recipes", response_model=RecipeRead, status_code=201)
@@ -40,9 +43,15 @@ def create_recipe(
 
 
 @router.get("/recipes/{recipe_id}", response_model=RecipeRead)
-def get_recipe(recipe_id: int, service: RecipeService = Depends(get_recipe_service)):
+def get_recipe(
+    recipe_id: int,
+    service: RecipeService = Depends(get_recipe_service),
+    current_user: UserORM | None = Depends(get_optional_current_user),
+):
     try:
-        return service.get_recipe(recipe_id)
+        return service.get_recipe(
+            recipe_id, current_user_id=current_user.id if current_user else None
+        )
     except LookupError:
         raise HTTPException(status_code=404, detail="Recipe not found")
     except PermissionError:

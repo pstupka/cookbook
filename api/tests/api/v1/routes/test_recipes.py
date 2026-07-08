@@ -160,6 +160,67 @@ def test_get_private_recipe_returns_403(regular_client):
     assert response.status_code == 403
 
 
+def test_get_private_recipe_no_auth_returns_403(client, db_session):
+    from app.services.recipe_service import RecipeService
+
+    created = RecipeService(db_session).create_recipe(
+        name="Private Bread",
+        description=PAYLOAD["description"],
+        ingredients=PAYLOAD["ingredients"],
+        instructions=PAYLOAD["instructions"],
+        visibility="private",
+        owner_id=998,
+    )
+
+    response = client.get(f"{BASE_URL}/{created.id}")
+
+    assert response.status_code == 403
+
+
+def test_get_members_recipe_no_auth_returns_403(client, db_session):
+    from app.services.recipe_service import RecipeService
+
+    created = RecipeService(db_session).create_recipe(
+        name="Members Bread",
+        description=PAYLOAD["description"],
+        ingredients=PAYLOAD["ingredients"],
+        instructions=PAYLOAD["instructions"],
+        visibility="members",
+        owner_id=998,
+    )
+
+    response = client.get(f"{BASE_URL}/{created.id}")
+
+    assert response.status_code == 403
+
+
+def test_user_a_cannot_fetch_user_b_private_recipe(client, db_session):
+    from app.api.v1.deps import get_optional_current_user
+    from app.db.schema import User as UserORM
+    from app.main import app
+    from app.services.recipe_service import RecipeService
+
+    recipe = RecipeService(db_session).create_recipe(
+        name="User B Secret",
+        description=PAYLOAD["description"],
+        ingredients=PAYLOAD["ingredients"],
+        instructions=PAYLOAD["instructions"],
+        visibility="private",
+        owner_id=2002,
+    )
+
+    user_a = UserORM(
+        id=1001, username="user-a", is_admin=False, hashed_password="x", disabled=False
+    )
+    app.dependency_overrides[get_optional_current_user] = lambda: user_a
+    try:
+        response = client.get(f"{BASE_URL}/{recipe.id}")
+    finally:
+        app.dependency_overrides.pop(get_optional_current_user, None)
+
+    assert response.status_code == 403
+
+
 def test_create_recipe_no_ingredients(regular_client):
     payload = {**PAYLOAD, "ingredients": []}
 

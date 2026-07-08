@@ -10,6 +10,7 @@ from app.db.schema import User as UserORM
 from app.models.user import TokenData
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token")
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token", auto_error=False)
 
 
 def get_db():
@@ -42,3 +43,21 @@ def get_current_user(
     if user is None:
         raise credentials_exception
     return user
+
+
+def get_optional_current_user(
+    token: str | None = Depends(oauth2_scheme_optional),
+    db: Session = Depends(get_db),
+) -> UserORM | None:
+    if token is None:
+        return None
+
+    try:
+        payload = jwt.decode(token, config.api_secret_key, algorithms=[config.api_algorithm])
+        username: str | None = payload.get("sub")
+        if username is None:
+            return None
+    except InvalidTokenError:
+        return None
+
+    return db.query(UserORM).filter(UserORM.username == username).first()

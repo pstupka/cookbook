@@ -31,11 +31,24 @@ def test_delete_user_requires_auth(client):
     assert client.delete(f"{BASE_URL}/1").status_code == 401
 
 
+def test_get_me_requires_auth(client):
+    assert client.get(f"{BASE_URL}/me").status_code == 401
+
+
 # --- Non-admin ---
 
 
 def test_create_user_requires_admin(regular_client):
     assert regular_client.post(BASE_URL, json=PAYLOAD).status_code == 403
+
+
+def test_get_me_as_regular_user(regular_client):
+    response = regular_client.get(f"{BASE_URL}/me")
+
+    assert response.status_code == 200
+    assert response.json()["id"] == 998
+    assert response.json()["username"] == "testuser"
+    assert response.json()["is_admin"] is False
 
 
 # --- Admin ---
@@ -59,6 +72,15 @@ def test_create_user(admin_client):
     assert data["full_name"] == "John Doe"
     assert data["disabled"] is False
     assert data["is_admin"] is False
+
+
+def test_get_me_as_admin(admin_client):
+    response = admin_client.get(f"{BASE_URL}/me")
+
+    assert response.status_code == 200
+    assert response.json()["id"] == 999
+    assert response.json()["username"] == "testadmin"
+    assert response.json()["is_admin"] is True
 
 
 def test_create_admin_user(admin_client):
