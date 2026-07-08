@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./src/api": "./src/api/index.ts",
-    "./src/types": "./src/types/index.ts",
-    "./src/utils": "./src/utils/index.ts"
+    "./api": "./src/api/index.ts",
+    "./types": "./src/types/index.ts",
+    "./utils": "./src/utils/index.ts"
   }
 }

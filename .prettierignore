@@ -6,5 +6,6 @@ node_modules
 **/.next
 **/.turbo
 **/coverage
+**/.react-router
 api/openapi.json
 packages/shared/src/api/schema.d.ts
