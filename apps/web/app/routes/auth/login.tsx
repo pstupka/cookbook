@@ -1,16 +1,23 @@
 import { useState } from "react";
 import { useAuth } from "~/hooks/useAuth";
+import { useNavigate } from "react-router";
 
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const auth = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = (event: React.SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
-    auth.login(username, password).catch((error) => {
-      console.error("Login failed:", error);
-    });
+    auth
+      .login(username, password)
+      .then(() => {
+        navigate("/");
+      })
+      .catch((error) => {
+        console.error("Login failed:", error);
+      });
   };
 
   return (
