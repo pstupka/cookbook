@@ -3,6 +3,7 @@ from sqlalchemy import text
 
 from app.db.schema import Base, SessionLocal, engine
 from app.services.recipe_service import RecipeService
+from app.services.user_service import UserService
 
 db = SessionLocal()
 
@@ -16,7 +17,7 @@ try:
     recipe_service = RecipeService(db)
 
     recipe_service.create_recipe(
-        name="Pasta Carbonara",
+        name="Admins public Carbonara",
         description="Classic Roman pasta with eggs and guanciale",
         ingredients=[
             {"name": "Spaghetti", "quantity": "200", "unit": "g"},
@@ -39,7 +40,7 @@ try:
     )
 
     recipe_service.create_recipe(
-        name="Avocado Toast",
+        name="Public Avocado Toast",
         description="Simple and healthy breakfast",
         ingredients=[
             {"name": "Sourdough Bread", "quantity": "2", "unit": "slices"},
@@ -105,6 +106,9 @@ try:
         owner_id=user.id,
         visibility="members",
     )
+
+    user_service = UserService(db)
+    user_service.create_user(username="test_user", password="test", email="test_user@example.com")
 
     print("Seed complete.")
 finally:
